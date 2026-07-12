@@ -8,5 +8,5 @@ git remote add origin https://github.com/Asmual/Assignment-9.git
 git push -u origin main
 
 git add .
-git commit -m "Style Corrections & Logo Updates"
+git commit -m "Appoint page & favIcon Updates"
 git push -u origin main
