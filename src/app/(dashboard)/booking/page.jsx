@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { toast } from "react-hot-toast";
@@ -16,21 +16,17 @@ import {
     FaSpinner
 } from "react-icons/fa";
 
-// Global Production/Development Backend API Endpoint configuration
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://assignment-9-server-ybq9.onrender.com";
 
 export default function BookingPage() {
     const router = useRouter();
-    
-    // Fetch stateful client-side session context via BetterAuth hook
     const { data: session, isPending } = useSession();
     const currentUser = session?.user;
 
-    // Component States
     const [bookings, setBookings] = useState([]);
     const [isLoadingBookings, setIsLoadingBookings] = useState(true);
     
-    // State management for Update (PATCH) Modal
+    // Update Modal States
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
     const [selectedBooking, setSelectedBooking] = useState(null);
     const [isSubmittingUpdate, setIsSubmittingUpdate] = useState(false);
@@ -41,80 +37,92 @@ export default function BookingPage() {
         notes: ""
     });
 
-    // State management for Delete Modal
+    // Delete Modal States
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [bookingToDelete, setBookingToDelete] = useState(null);
     const [isSubmittingDelete, setIsSubmittingDelete] = useState(false);
 
-    /**
-     * Enforces client-side Route Protection.
-     */
-    useEffect(() => {
-        if (!isPending && !session?.user) {
-            router.push("/login");
-        }
-    }, [session, isPending, router]);
+    // Prevent multiple parallel initial fetches
+    const hasFetchedRef = useRef(false);
 
     /**
-     * Data Hydration: Retrieves user-specific records from backend.
+     * Helper function to get authorization headers correctly
      */
-    useEffect(() => {
-        const fetchUserBookings = async () => {
-            try {
-                setIsLoadingBookings(true);
-                const token = localStorage.getItem("docappoint_token");
-
-                const res = await fetch(`${BACKEND_URL}/api/bookings?email=${currentUser.email}`, {
-                    credentials: "include",
-                    headers: {
-                        "Content-Type": "application/json",
-                        ...(token && { "Authorization": `Bearer ${token}` }),
-                    }
-                });
-
-                if (res.ok) {
-                    const data = await res.json();
-                    setBookings(data.bookings || data);
-                } else {
-                    const err = await res.json();
-                    toast.error(err.message || "Failed to load bookings.");
-                }
-            } catch (error) {
-                console.error("Error fetching bookings:", error);
-                toast.error("Failed to load bookings from server.");
-            } finally {
-                setIsLoadingBookings(false);
-            }
+    const getAuthHeaders = () => {
+        const token = typeof window !== "undefined" ? localStorage.getItem("docappoint_token") : null;
+        return {
+            "Content-Type": "application/json",
+            ...(token ? { "Authorization": `Bearer ${token}` } : {})
         };
+    };
 
-        if (!isPending && currentUser?.email) {
+    /**
+     * Fetch user bookings safely with auto-retry on 401 reload
+     */
+    const fetchUserBookings = useCallback(async (isRetry = false) => {
+        if (!currentUser?.email) return;
+
+        try {
+            setIsLoadingBookings(true);
+            const res = await fetch(`${BACKEND_URL}/api/bookings?email=${currentUser.email}`, {
+                method: "GET",
+                credentials: "include",
+                headers: getAuthHeaders()
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setBookings(data.bookings || data);
+            } else if (res.status === 401 && !isRetry) {
+                // If 401 on page refresh, wait 600ms for token/session hydration and retry once
+                setTimeout(() => {
+                    // eslint-disable-next-line react-hooks/immutability
+                    fetchUserBookings(true);
+                }, 600);
+                return;
+            } else {
+                const err = await res.json().catch(() => ({}));
+                toast.error(err.message || "Failed to load bookings.");
+            }
+        } catch (error) {
+            console.error("Error fetching bookings:", error);
+            toast.error("Failed to load bookings from server.");
+        } finally {
+            setIsLoadingBookings(false);
+        }
+    }, [currentUser?.email]);
+
+    // Handle session loading and automatic data fetching on reload
+    useEffect(() => {
+        if (isPending) return;
+
+        if (!session?.user) {
+            toast.error("Unauthorized access: Login required");
+            router.push("/login");
+            return;
+        }
+
+        // Fetch bookings once user session is active
+        if (currentUser?.email) {
             fetchUserBookings();
         }
-    }, [currentUser, isPending]);
+    }, [isPending, session, router, currentUser?.email, fetchUserBookings]);
 
-    /**
-     * Handles HTTP DELETE request.
-     */
+    // Delete Booking Handler
     const handleConfirmDelete = async () => {
         if (!bookingToDelete) return;
         setIsSubmittingDelete(true);
 
         try {
-            const token = localStorage.getItem("docappoint_token");
-
             const res = await fetch(`${BACKEND_URL}/api/bookings/${bookingToDelete._id}`, {
                 method: "DELETE",
                 credentials: "include",
-                headers: {
-                    "Content-Type": "application/json",
-                    ...(token && { "Authorization": `Bearer ${token}` }),
-                }
+                headers: getAuthHeaders()
             });
             const result = await res.json();
 
             if (res.ok && result.success) {
                 toast.success("Appointment canceled successfully.");
-                // Optimistic UI update
                 setBookings((prev) => prev.filter((item) => item._id !== bookingToDelete._id));
                 setIsDeleteModalOpen(false);
                 setBookingToDelete(null);
@@ -123,15 +131,13 @@ export default function BookingPage() {
             }
         } catch (error) {
             console.error("Delete error:", error);
-            toast.error("Server connection lost. Could not delete.");
+            toast.error("Server connection error.");
         } finally {
             setIsSubmittingDelete(false);
         }
     };
 
-    /**
-     * Populates selected booking data into update modal form.
-     */
+    // Open Update Modal
     const openUpdateModal = (booking) => {
         setSelectedBooking(booking);
         setUpdateFormData({
@@ -143,30 +149,22 @@ export default function BookingPage() {
         setIsUpdateModalOpen(true);
     };
 
-    /**
-     * Handles HTTP PATCH request for updating appointment details.
-     */
+    // Submit Update Handler
     const handleUpdateSubmit = async (e) => {
         e.preventDefault();
         setIsSubmittingUpdate(true);
 
         try {
-            const token = localStorage.getItem("docappoint_token");
-
             const res = await fetch(`${BACKEND_URL}/api/bookings/${selectedBooking._id}`, {
                 method: "PATCH",
                 credentials: "include",
-                headers: {
-                    "Content-Type": "application/json",
-                    ...(token && { "Authorization": `Bearer ${token}` }),
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(updateFormData)
             });
             const result = await res.json();
 
             if (res.ok && result.success) {
                 toast.success("Appointment updated successfully.");
-                // Update local state dynamically
                 setBookings((prev) =>
                     prev.map((item) =>
                         item._id === selectedBooking._id
@@ -180,13 +178,13 @@ export default function BookingPage() {
             }
         } catch (error) {
             console.error("Update error:", error);
-            toast.error("Server error. Failed to save changes.");
+            toast.error("Server error.");
         } finally {
             setIsSubmittingUpdate(false);
         }
     };
 
-    // Loader screen during session resolution
+    // Show loading spinner while session is being resolved on page reload
     if (isPending) {
         return (
             <div className="flex min-h-[60vh] items-center justify-center">
@@ -201,7 +199,6 @@ export default function BookingPage() {
         <div className="w-full min-h-[70vh] px-4 py-8 md:px-6 bg-white">
             <div className="max-w-6xl mx-auto space-y-6">
 
-                {/* Section Header */}
                 <div>
                     <h2 className="text-3xl font-extrabold tracking-tight md:text-4xl text-[#941865]">
                         My Bookings
@@ -211,7 +208,6 @@ export default function BookingPage() {
                     </p>
                 </div>
 
-                {/* Bookings List Display */}
                 <div>
                     {isLoadingBookings ? (
                         <div className="flex justify-center items-center min-h-64">
@@ -225,7 +221,6 @@ export default function BookingPage() {
                             </div>
                         </div>
                     ) : (
-                        /* Grid Layout for Bookings */
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {bookings.map((booking) => (
                                 <div 
@@ -258,7 +253,6 @@ export default function BookingPage() {
                                         </div>
                                     </div>
 
-                                    {/* Action Buttons */}
                                     <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
                                         <button
                                             onClick={() => openUpdateModal(booking)}
