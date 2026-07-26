@@ -139,14 +139,7 @@ export default function Navbar() {
                   </div>
 
                   <div className="py-1">
-                    <Link
-                      href="/booking"
-                      onClick={() => setDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-[#941865] transition-colors"
-                    >
-                      <MdBookmarkBorder className="text-lg" />
-                      My Booking
-                    </Link>
+                    
                     <Link
                       href="/my-profile"
                       onClick={() => setDropdownOpen(false)}
@@ -218,13 +211,6 @@ export default function Navbar() {
                       <p className="text-xs font-medium text-gray-500 truncate">{user.email}</p>
                     </div>
                   </div>
-                  <Link
-                    href="/booking"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-[#941865] py-1"
-                  >
-                    <MdBookmarkBorder className="text-lg" /> My Booking
-                  </Link>
                   <Link
                     href="/my-profile"
                     onClick={() => setMobileMenuOpen(false)}

@@ -8,5 +8,5 @@ git remote add origin https://github.com/Asmual/Assignment-9.git
 git push -u origin main
 
 git add .
-git commit -m "feat(auth): Update login/register forms and add password visibility toggle"
+git commit -m "Update Navbar,Footer,Booking page & My Profile Page"
 git push

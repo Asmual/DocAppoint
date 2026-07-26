@@ -225,7 +225,7 @@ export default function BookingPage() {
                             {bookings.map((booking) => (
                                 <div 
                                     key={booking._id} 
-                                    className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-4"
+                                    className="bg-white border border-[#941865] rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-4"
                                 >
                                     <div className="space-y-3">
                                         <h3 className="text-lg font-bold text-[#0f766e]">
@@ -233,20 +233,20 @@ export default function BookingPage() {
                                         </h3>
                                         <div className="space-y-2 text-xs md:text-sm text-gray-600">
                                             <div className="flex items-center gap-2">
-                                                <FaUserAlt className="text-gray-400 shrink-0 text-xs" />
+                                                <FaUserAlt className="text-[#941865] shrink-0 text-xs" />
                                                 <span>Patient: <strong className="text-gray-800">{booking.patientName}</strong></span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <FaCalendarAlt className="text-gray-400 shrink-0 text-xs" />
+                                                <FaCalendarAlt className="text-[#941865] shrink-0 text-xs" />
                                                 <span>Date: <strong className="text-gray-800">{booking.appointmentDate || booking.date}</strong></span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <FaClock className="text-gray-400 shrink-0 text-xs" />
+                                                <FaClock className="text-[#941865] shrink-0 text-xs" />
                                                 <span>Time: <strong className="text-gray-800">{booking.appointmentTime || booking.time || "Not Set"}</strong></span>
                                             </div>
                                             {booking.notes && (
                                                 <div className="flex items-start gap-2 pt-2 border-t border-gray-100 mt-2">
-                                                    <FaNotesMedical className="text-gray-400 shrink-0 text-xs mt-0.5" />
+                                                    <FaNotesMedical className="text-[#941865] shrink-0 text-xs mt-0.5" />
                                                     <span className="text-xs wrap-break-word">Reason: {booking.notes}</span>
                                                 </div>
                                             )}

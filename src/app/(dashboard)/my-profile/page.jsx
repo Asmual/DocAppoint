@@ -18,13 +18,12 @@ import {
 // Global Production/Development Backend API Endpoint
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://assignment-9-server-ybq9.onrender.com";
 
-// ImgBB API Key (Needs to be declared in .env.local as NEXT_PUBLIC_IMGBB_API_KEY)
-const IMGBB_API_KEY = process.env.NEXT_PUBLIC_IMGBB_API_KEY || "YOUR_IMGBB_API_KEY";
+// ImgBB API Key
+const IMGBB_API_KEY = process.env.NEXT_PUBLIC_IMGBB_API_KEY || "8db3ed627958165a68869da0d42a539e";
 
 export default function MyProfilePage() {
     const router = useRouter();
-    const { data: session, isPending } = useSession();
-    const currentUser = session?.user;
+    const { data: session, isPending, refetch } = useSession();
 
     // Local state for user metadata
     const [formData, setFormData] = useState({
@@ -37,17 +36,41 @@ export default function MyProfilePage() {
     const [isUploadingImage, setIsUploadingImage] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Populate user state once session resolves
+    // Fetch active profile data directly from MongoDB & Session on page load
     useEffect(() => {
-        if (!isPending && session?.user) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setFormData({
-                name: session.user.name || "",
-                email: session.user.email || "",
-                phone: session.user.phone || "",
-                image: session.user.image || "https://i.ibb.co/mR4qB8S/avatar-placeholder.png"
-            });
-        }
+        const loadProfileData = async () => {
+            if (!isPending && session?.user?.email) {
+                const userEmail = session.user.email;
+
+                // Fallback initial data from auth session
+                setFormData({
+                    name: session.user.name || "",
+                    email: userEmail,
+                    phone: session.user.phone || session.user.phoneNumber || "",
+                    image: session.user.image || session.user.avatar || ""
+                });
+
+                // Fetch database stored details from backend so data persists after refresh
+                try {
+                    const res = await fetch(`${BACKEND_URL}/api/users/profile?email=${encodeURIComponent(userEmail)}`);
+                    if (res.ok) {
+                        const dbResult = await res.json();
+                        if (dbResult?.data) {
+                            setFormData({
+                                name: dbResult.data.name || session.user.name || "",
+                                email: userEmail,
+                                phone: dbResult.data.phone || session.user.phone || session.user.phoneNumber || "",
+                                image: dbResult.data.image || session.user.image || session.user.avatar || ""
+                            });
+                        }
+                    }
+                } catch (err) {
+                    console.error("Failed to load user profile from MongoDB:", err);
+                }
+            }
+        };
+
+        loadProfileData();
     }, [session, isPending]);
 
     // Redirect unauthenticated traffic
@@ -58,13 +81,12 @@ export default function MyProfilePage() {
     }, [session, isPending, router]);
 
     /**
-     * Handles file selection and direct upload to ImgBB API
+     * Direct upload to ImgBB API
      */
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Image validation
         if (!file.type.startsWith("image/")) {
             toast.error("Please upload a valid image file.");
             return;
@@ -75,7 +97,7 @@ export default function MyProfilePage() {
 
         try {
             setIsUploadingImage(true);
-            toast.loading("Uploading avatar to ImgBB...", { id: "img-upload" });
+            toast.loading("Uploading image...", { id: "img-upload" });
 
             const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
                 method: "POST",
@@ -84,14 +106,12 @@ export default function MyProfilePage() {
 
             const data = await res.json();
 
-            if (data.success) {
-                const uploadedImageUrl = data.data.url;
-                
-                // Immediately sync local preview state
+            if (data.success && data.data?.display_url) {
+                const uploadedImageUrl = data.data.display_url;
                 setFormData((prev) => ({ ...prev, image: uploadedImageUrl }));
-                toast.success("Profile image uploaded successfully!", { id: "img-upload" });
+                toast.success("Image uploaded successfully! Click to save permanently.", { id: "img-upload" });
             } else {
-                toast.error("ImgBB Upload failed! Please check API Key.", { id: "img-upload" });
+                toast.error(data?.error?.message || "Image Upload failed!", { id: "img-upload" });
             }
         } catch (error) {
             console.error("ImgBB Upload error:", error);
@@ -102,7 +122,7 @@ export default function MyProfilePage() {
     };
 
     /**
-     * Submit handler for updating profile information to MongoDB backend
+     * Submit profile update to Backend & MongoDB
      */
     const handleProfileUpdate = async (e) => {
         e.preventDefault();
@@ -111,30 +131,49 @@ export default function MyProfilePage() {
         try {
             const token = localStorage.getItem("docappoint_token");
 
+            const updatePayload = {
+                email: formData.email || session?.user?.email,
+                name: formData.name,
+                phone: formData.phone,
+                phoneNumber: formData.phone,
+                image: formData.image,
+                avatar: formData.image
+            };
+
             const res = await fetch(`${BACKEND_URL}/api/users/profile`, {
                 method: "PATCH",
-                credentials: "include",
                 headers: {
                     "Content-Type": "application/json",
                     ...(token && { "Authorization": `Bearer ${token}` }),
                 },
-                body: JSON.stringify({
-                    name: formData.name,
-                    phone: formData.phone,
-                    image: formData.image
-                })
+                body: JSON.stringify(updatePayload)
             });
 
-            const result = await res.json();
+            const contentType = res.headers.get("content-type");
+            let result;
 
-            if (res.ok) {
-                toast.success("Profile details updated successfully!");
+            if (contentType && contentType.includes("application/json")) {
+                result = await res.json();
+            } else {
+                const textText = await res.text();
+                console.error("Backend non-JSON response:", textText);
+                throw new Error(`Server connection error (${res.status}).`);
+            }
+
+            if (res.ok && result.success) {
+                toast.success(result.message || "Profile details updated successfully!");
+                
+                if (typeof refetch === "function") {
+                    await refetch();
+                } else {
+                    router.refresh();
+                }
             } else {
                 toast.error(result.message || "Failed to update profile.");
             }
         } catch (error) {
             console.error("Update profile error:", error);
-            toast.error("Server connection error while saving profile.");
+            toast.error(error.message || "Server error while saving profile.");
         } finally {
             setIsSubmitting(false);
         }
@@ -153,8 +192,6 @@ export default function MyProfilePage() {
     return (
         <div className="w-full min-h-[70vh] px-4 py-8 md:px-6 bg-white">
             <div className="max-w-3xl mx-auto space-y-8">
-                
-                {/* Header Section */}
                 <div>
                     <h2 className="text-3xl font-extrabold tracking-tight md:text-4xl text-[#941865]">
                         My Profile
@@ -164,8 +201,7 @@ export default function MyProfilePage() {
                     </p>
                 </div>
 
-                {/* Profile Card Container */}
-                <div className="bg-white rounded-2xl border border-gray-150 p-6 md:p-8 shadow-sm">
+                <div className="bg-white rounded-2xl border border-[#941865] p-6 md:p-8 shadow-sm">
                     <form onSubmit={handleProfileUpdate} className="space-y-6">
                         
                         {/* Avatar Image Upload Section */}
@@ -185,7 +221,6 @@ export default function MyProfilePage() {
                                         <FaUser className="text-4xl text-gray-400" />
                                     )}
 
-                                    {/* Uploading Overlay Spinner */}
                                     {isUploadingImage && (
                                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white">
                                             <FaSpinner className="animate-spin text-2xl" />
@@ -193,11 +228,10 @@ export default function MyProfilePage() {
                                     )}
                                 </div>
 
-                                {/* ImgBB Trigger Input & Icon Button */}
                                 <label 
                                     htmlFor="avatar-upload"
                                     className="absolute bottom-1 right-1 bg-[#941865] text-white p-2.5 rounded-full shadow-md hover:bg-[#7a1353] cursor-pointer transition-all hover:scale-105 active:scale-95"
-                                    title="Upload new image to ImgBB"
+                                    title="Upload new image"
                                 >
                                     <FaCamera className="text-xs md:text-sm" />
                                 </label>
@@ -211,17 +245,15 @@ export default function MyProfilePage() {
                                 />
                             </div>
                             <p className="text-xs text-gray-400 mt-3">
-                                Click the camera icon to upload a photo (auto-uploaded to ImgBB)
+                                Click camera icon to upload photo. Max size: 5MB. Supported formats: JPG, PNG, GIF.
                             </p>
                         </div>
 
-                        {/* Input Fields Grid */}
+                        {/* Form Fields */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            
-                            {/* User Name */}
                             <div className="flex flex-col gap-1.5">
                                 <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
-                                    <FaUser className="text-gray-400" /> Full Name
+                                    <FaUser className="text-[#941865]" /> Full Name
                                 </label>
                                 <input
                                     type="text"
@@ -233,10 +265,9 @@ export default function MyProfilePage() {
                                 />
                             </div>
 
-                            {/* Email Address (Blocked/Disabled) */}
                             <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
-                                    <FaEnvelope className="text-gray-400" /> Email Address <FaUserShield className="text-gray-400 text-xs" title="Protected field" />
+                                <label className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-2">
+                                    <FaEnvelope className="text-[#941865]" /> Email Address <FaUserShield className="text-gray-400 text-xs" />
                                 </label>
                                 <input
                                     type="email"
@@ -247,10 +278,9 @@ export default function MyProfilePage() {
                                 />
                             </div>
 
-                            {/* Phone Number Input */}
                             <div className="flex flex-col gap-1.5 md:col-span-2">
-                                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
-                                    <FaPhone className="text-gray-400" /> Phone Number
+                                <label className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-2">
+                                    <FaPhone className="text-[#941865]" /> Phone Number
                                 </label>
                                 <input
                                     type="tel"
@@ -262,7 +292,7 @@ export default function MyProfilePage() {
                             </div>
                         </div>
 
-                        {/* Save Action Button */}
+                        {/* Submit Button */}
                         <div className="pt-4 flex justify-end">
                             <button
                                 type="submit"
