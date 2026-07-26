@@ -8,5 +8,5 @@ git remote add origin https://github.com/Asmual/Assignment-9.git
 git push -u origin main
 
 git add .
-git commit -m "Appoint page & favIcon Updates"
-git push -u origin main
+git commit -m "feat(dashboard): add profile management with ImgBB upload and refine booking & navbar routing"
+git push
