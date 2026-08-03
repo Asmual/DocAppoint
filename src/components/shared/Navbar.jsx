@@ -8,11 +8,19 @@ import { useSession, signOut } from "@/lib/auth-client";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { RiMenu3Line } from "react-icons/ri";
-import { MdClose, MdPersonOutline, MdLogout, MdSearch, MdOutlineMedicalServices } from "react-icons/md";
+import {
+  MdClose,
+  MdPersonOutline,
+  MdLogout,
+  MdSearch,
+  MdOutlineMedicalServices,
+} from "react-icons/md";
 import { FaUserCircle } from "react-icons/fa";
 import toast from "react-hot-toast";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://assignment-9-server-ybq9.onrender.com";
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  "https://assignment-9-server-ybq9.onrender.com";
 
 export default function Navbar() {
   const { data: session, isPending } = useSession();
@@ -43,7 +51,7 @@ export default function Navbar() {
             localStorage.setItem("docappoint_token", data.token);
           }
         })
-        .catch(() => { });
+        .catch(() => {});
     } else {
       localStorage.removeItem("docappoint_token");
     }
@@ -68,7 +76,9 @@ export default function Navbar() {
 
   // Real-time Debounced Search Logic
   useEffect(() => {
-    if (!searchQuery.trim()) {
+    const trimmedQuery = searchQuery.trim();
+
+    if (!trimmedQuery) {
       setSearchResults([]);
       setSearchDropdownOpen(false);
       return;
@@ -78,8 +88,13 @@ export default function Navbar() {
       setIsSearching(true);
       setSearchDropdownOpen(true);
       try {
-        const res = await fetch(`${BACKEND_URL}/api/doctors/search?query=${encodeURIComponent(searchQuery)}`);
+        const res = await fetch(
+          `${BACKEND_URL}/api/doctors/search?query=${encodeURIComponent(
+            trimmedQuery
+          )}`
+        );
         const data = await res.json();
+
         if (data.success) {
           setSearchResults(data.doctors || []);
         } else {
@@ -119,15 +134,26 @@ export default function Navbar() {
   return (
     <nav className="w-full bg-white border-b border-gray-100 shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto flex items-center justify-between py-3 px-4 md:px-6 gap-3">
-        
         {/* Brand Logo & Search Box Container */}
         <div className="flex items-center gap-4 lg:gap-6 flex-1 md:flex-none">
           <Link href="/" className="flex items-center gap-2 shrink-0">
-            <img src="/images/logo.png" alt="DocAppoint Logo" width={42} height={42} className="object-contain" style={{ height: "auto" }} />
-            <span className="text-xl font-bold tracking-tight hidden sm:inline" style={{ color: "#941865" }}>DocAppoint</span>
+            <img
+              src="/images/logo.png"
+              alt="DocAppoint Logo"
+              width={42}
+              height={42}
+              className="object-contain"
+              style={{ height: "auto" }}
+            />
+            <span
+              className="text-xl font-bold tracking-tight hidden sm:inline"
+              style={{ color: "#941865" }}
+            >
+              DocAppoint
+            </span>
           </Link>
 
-          {/* Search Input Box (Desktop & Mobile) */}
+          {/* Search Input Box */}
           <div className="relative w-full sm:w-64 md:w-72 lg:w-80" ref={searchRef}>
             <div className="relative flex items-center">
               <input
@@ -135,13 +161,19 @@ export default function Navbar() {
                 placeholder="Search doctors, specialty..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => searchQuery.trim() && setSearchDropdownOpen(true)}
-                className="w-full pl-9 pr-4 py-1.5 text-xs md:text-sm bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:border-[#941865] focus:bg-white transition-all text-gray-800 placeholder-gray-400"
+                onFocus={() => {
+                  if (searchQuery.trim()) setSearchDropdownOpen(true);
+                }}
+                className="w-full pl-9 pr-8 py-1.5 text-xs md:text-sm bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:border-[#941865] focus:bg-white transition-all text-gray-800 placeholder-gray-400"
               />
               <MdSearch className="absolute left-3 text-lg text-gray-400" />
               {searchQuery && (
-                <button 
-                  onClick={() => setSearchQuery("")} 
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSearchResults([]);
+                    setSearchDropdownOpen(false);
+                  }}
                   className="absolute right-3 text-gray-400 hover:text-gray-600 text-xs font-bold"
                 >
                   ✕
@@ -165,7 +197,7 @@ export default function Navbar() {
                     {searchResults.map((doctor) => (
                       <Link
                         key={doctor._id}
-                        href={`/doctor/${doctor._id}`}
+                        href={`/doctors/${doctor._id}`}
                         onClick={() => {
                           setSearchDropdownOpen(false);
                           setSearchQuery("");
@@ -174,7 +206,11 @@ export default function Navbar() {
                       >
                         <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 shrink-0 border border-gray-200">
                           {doctor.image ? (
-                            <img src={doctor.image} alt={doctor.name} className="w-full h-full object-cover" />
+                            <img
+                              src={doctor.image}
+                              alt={doctor.name}
+                              className="w-full h-full object-cover"
+                            />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-50">
                               <MdOutlineMedicalServices className="text-lg" />
@@ -210,27 +246,41 @@ export default function Navbar() {
         {/* Desktop Navigation Links */}
         <div className="hidden lg:flex items-center gap-6">
           {navLinks.map((link) => (
-            <Link key={link.href} href={link.href}
+            <Link
+              key={link.href}
+              href={link.href}
               className={`text-sm font-medium transition-colors duration-200 relative group shrink-0
-                ${pathname === link.href ? "text-[#941865]" : "text-gray-600 hover:text-[#941865]"}`}>
+                ${pathname === link.href ? "text-[#941865]" : "text-gray-600 hover:text-[#941865]"}`}
+            >
               {link.label}
-              <span className={`absolute -bottom-1 left-0 h-0.5 bg-[#941865] transition-all duration-300
-                ${pathname === link.href ? "w-full" : "w-0"}`} />
+              <span
+                className={`absolute -bottom-1 left-0 h-0.5 bg-[#941865] transition-all duration-300
+                ${pathname === link.href ? "w-full" : "w-0"}`}
+              />
             </Link>
           ))}
         </div>
-        
+
         {/* Desktop Auth Controls & User Profile Dropdown */}
         <div className="hidden md:flex items-center gap-4 shrink-0">
           {isPending ? (
             <div className="w-8 h-8 border-2 border-[#941865] border-t-transparent rounded-full animate-spin" />
           ) : !user ? (
             <>
-              <Link href="/login" className="text-sm font-medium text-[#941865] border border-[#941865] rounded-lg py-1.5 px-4 relative overflow-hidden group transition-colors duration-300 ease-out hover:text-white">
+              <Link
+                href="/login"
+                className="text-sm font-medium text-[#941865] border border-[#941865] rounded-lg py-1.5 px-4 relative overflow-hidden group transition-colors duration-300 ease-out hover:text-white"
+              >
                 <span className="absolute inset-0 w-full h-full bg-[#941865] transition-transform duration-300 ease-out -translate-x-full group-hover:translate-x-0" />
                 <span className="relative z-10">Login</span>
               </Link>
-              <Link href="/register" className="text-sm font-medium text-white rounded-lg py-1.5 px-4 transition-all duration-200 hover:opacity-90" style={{ backgroundColor: "#941865" }}>Register</Link>
+              <Link
+                href="/register"
+                className="text-sm font-medium text-white rounded-lg py-1.5 px-4 transition-all duration-200 hover:opacity-90"
+                style={{ backgroundColor: "#941865" }}
+              >
+                Register
+              </Link>
             </>
           ) : (
             <div className="relative" ref={dropdownRef}>
@@ -243,8 +293,14 @@ export default function Navbar() {
                 </span>
                 <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center border-2 border-[#941865]">
                   {user.image ? (
-                    <Image src={user.image} alt={user.name || "User"} width={36} height={36}
-                      className="object-cover w-full h-full rounded-full" referrerPolicy="no-referrer" />
+                    <Image
+                      src={user.image}
+                      alt={user.name || "User"}
+                      width={36}
+                      height={36}
+                      className="object-cover w-full h-full rounded-full"
+                      referrerPolicy="no-referrer"
+                    />
                   ) : (
                     <FaUserCircle className="text-3xl text-[#941865]" />
                   )}
@@ -283,10 +339,13 @@ export default function Navbar() {
             </div>
           )}
         </div>
-        
+
         {/* Mobile Menu Toggle Button */}
         <div className="flex lg:hidden items-center gap-2">
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="focus:outline-none text-gray-700 hover:text-[#941865] transition-colors p-1">
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="focus:outline-none text-gray-700 hover:text-[#941865] transition-colors p-1"
+          >
             {mobileMenuOpen ? <MdClose className="text-2xl" /> : <RiMenu3Line className="text-2xl" />}
           </button>
         </div>
@@ -297,11 +356,17 @@ export default function Navbar() {
         <div className="lg:hidden bg-white border-t border-gray-100 shadow-md">
           <div className="flex flex-col px-6 py-4 gap-1">
             {navLinks.map((link) => (
-              <Link key={link.href} href={link.href} onClick={() => setMobileMenuOpen(false)}
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
                 className={`text-sm font-semibold py-2.5 border-b border-gray-50 transition-colors duration-200
-                  ${pathname === link.href ? "text-[#941865]" : "text-gray-600 hover:text-[#941865]"}`}>
+                  ${pathname === link.href ? "text-[#941865]" : "text-gray-600 hover:text-[#941865]"}`}
+              >
                 {link.label}
-                {pathname === link.href && <span className="ml-2 inline-block w-1.5 h-1.5 rounded-full bg-[#941865] align-middle" />}
+                {pathname === link.href && (
+                  <span className="ml-2 inline-block w-1.5 h-1.5 rounded-full bg-[#941865] align-middle" />
+                )}
               </Link>
             ))}
             <div className="pt-3 flex flex-col gap-2">
@@ -311,16 +376,35 @@ export default function Navbar() {
                 </div>
               ) : !user ? (
                 <>
-                  <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="w-full text-center text-sm font-semibold text-[#941865] border border-[#941865] rounded-lg py-2.5 hover:bg-[#941865] hover:text-white transition-all duration-200">Login</Link>
-                  <Link href="/register" onClick={() => setMobileMenuOpen(false)} className="w-full text-center text-sm font-semibold text-white rounded-lg py-2.5 hover:opacity-90 transition-all duration-200" style={{ backgroundColor: "#941865" }}>Register</Link>
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full text-center text-sm font-semibold text-[#941865] border border-[#941865] rounded-lg py-2.5 hover:bg-[#941865] hover:text-white transition-all duration-200"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/register"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full text-center text-sm font-semibold text-white rounded-lg py-2.5 hover:opacity-90 transition-all duration-200"
+                    style={{ backgroundColor: "#941865" }}
+                  >
+                    Register
+                  </Link>
                 </>
               ) : (
                 <div className="flex flex-col gap-3 pt-2">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center border-2 border-[#941865]">
                       {user.image ? (
-                        <Image src={user.image} alt={user.name || "User"} width={40} height={40}
-                          className="object-cover w-full h-full rounded-full" referrerPolicy="no-referrer" />
+                        <Image
+                          src={user.image}
+                          alt={user.name || "User"}
+                          width={40}
+                          height={40}
+                          className="object-cover w-full h-full rounded-full"
+                          referrerPolicy="no-referrer"
+                        />
                       ) : (
                         <FaUserCircle className="text-4xl text-[#941865]" />
                       )}
