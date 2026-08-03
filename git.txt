@@ -8,5 +8,5 @@ git remote add origin https://github.com/Asmual/Assignment-9.git
 git push -u origin main
 
 git add .
-git commit -m "Update Navbar,Footer,Booking page & My Profile Page"
+git commit -m "Update Some Degits in Navbar and Home Section"
 git push

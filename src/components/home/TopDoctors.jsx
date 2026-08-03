@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { FaStar, FaRegClock, FaMapMarkerAlt, FaStethoscope } from "react-icons/fa";
 
-
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://assignment-9-server-ybq9.onrender.com";
 
 export default function TopRatedDoctors() {
@@ -17,7 +16,6 @@ export default function TopRatedDoctors() {
   const [topRated, setTopRated] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-
   useEffect(() => {
     const fetchTopDoctors = async () => {
       try {
@@ -25,8 +23,6 @@ export default function TopRatedDoctors() {
         const res = await fetch(`${BACKEND_URL}/api/doctors`);
         if (res.ok) {
           const data = await res.json();
-          
-         
           const sortedData = [...data]
             .sort((a, b) => (b.rating || 0) - (a.rating || 0))
             .slice(0, 3);
@@ -49,7 +45,6 @@ export default function TopRatedDoctors() {
     router.push(isLoggedIn ? `/doctors/${id}` : "/login");
   };
 
- 
   if (isLoading) {
     return (
       <div className="flex py-20 items-center justify-center bg-white">
@@ -58,7 +53,6 @@ export default function TopRatedDoctors() {
     );
   }
 
- 
   if (topRated.length === 0) return null;
 
   return (
@@ -76,13 +70,12 @@ export default function TopRatedDoctors() {
       {/* 3-Column Layout Container */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 bg-white">
         {topRated.map((doctor) => {
-          
           const currentId = doctor._id || doctor.id;
 
           return (
             <div
               key={currentId}
-              className="bg-white rounded-xl shadow-sm border border-gray-150 overflow-hidden hover:shadow-md transition-all duration-300 group flex flex-col justify-between"
+              className="bg-white rounded-xl shadow-sm border border-[#941865]/20 overflow-hidden hover:shadow-md transition-all duration-300 group flex flex-col justify-between"
             >
               {/* Top-aligned Image Container */}
               <div className="relative h-56 w-full bg-gray-50 overflow-hidden">

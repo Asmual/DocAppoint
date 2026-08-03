@@ -171,7 +171,8 @@ export default function Navbar() {
                 onFocus={() => {
                   if (searchQuery.trim()) setSearchDropdownOpen(true);
                 }}
-                className="w-full pl-9 pr-8 py-1.5 text-xs md:text-sm bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:border-[#941865] focus:bg-white transition-all text-gray-800 placeholder-gray-400"
+                className="w-full pl-9 pr-8 py-1.5 text-xs md:text-sm bg-gray-50 border rounded-full focus:outline-none focus:bg-white transition-all text-gray-800 placeholder-gray-400"
+                style={{ borderColor: "#941865" }}
               />
               <MdSearch className="absolute left-3 text-lg text-gray-400" />
               {searchQuery && (

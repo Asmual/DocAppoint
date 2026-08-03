@@ -47,15 +47,15 @@ export default function FaqAccordion() {
       : faqList.filter((item) => item.category === activeTab);
 
   return (
-    <section className="py-16 bg-white w-full overflow-hidden">
-      <div className="max-w-5xl mx-auto px-4 md:px-6">
+    <section className="py-12 px-4 max-full mx-auto bg-white w-full overflow-hidden">
+      <div className="max-w-5xl mx-auto">
         
         {/* Section Header */}
-        <div className="text-center max-w-2xl mx-auto space-y-3 mb-10">
-          <h2 className="text-3xl font-extrabold tracking-tight md:text-4xl text-[#941865]">
-            Frequently Asked Questions
+        <div className="text-center max-w-xl mx-auto mb-10">
+          <h2 className="text-2xl font-bold tracking-tight text-gray-900 md:text-3xl">
+            Frequently <span style={{ color: "#941865" }}>Asked Questions</span>
           </h2>
-          <p className="text-sm md:text-base text-gray-500 max-w-xl mx-auto leading-relaxed">
+          <p className="mt-2 text-xs md:text-sm text-gray-500">
             Got questions? We have answers. Find answers to common queries regarding doctor bookings, payments, and account setup.
           </p>
         </div>
@@ -66,7 +66,7 @@ export default function FaqAccordion() {
             <button
               key={category}
               onClick={() => setActiveTab(category)}
-              className={`px-4 py-2 text-sm font-bold rounded-xl transition-all duration-200 shadow-sm ${
+              className={`px-4 py-2 text-xs md:text-sm font-semibold rounded-xl transition-all duration-200 shadow-sm cursor-pointer ${
                 activeTab === category
                   ? "bg-[#941865] text-white"
                   : "bg-gray-50 text-gray-600 border border-gray-100 hover:bg-gray-100 hover:text-[#941865]"
@@ -83,44 +83,44 @@ export default function FaqAccordion() {
             filteredFaqs.map((item, index) => (
               <div
                 key={item.id}
-                className="collapse collapse-plus bg-gray-50/50 border border-gray-100 rounded-2xl shadow-sm hover:border-[#941865]/30 transition-all duration-200"
+                className="collapse collapse-plus bg-gray-50/50 border border-[#941865]/20 rounded-2xl shadow-sm hover:border-[#941865]/40 transition-all duration-200"
               >
                 <input
                   type="radio"
                   name="faq-accordion"
                   defaultChecked={index === 0}
                 />
-                <div className="collapse-title text-base sm:text-lg font-bold text-gray-800 pr-12">
+                <div className="collapse-title text-sm sm:text-base font-bold text-gray-800 pr-12">
                   {item.question}
                 </div>
-                <div className="collapse-content text-sm text-gray-600 leading-relaxed">
+                <div className="collapse-content text-xs sm:text-sm text-gray-600 leading-relaxed">
                   <p>{item.answer}</p>
                 </div>
               </div>
             ))
           ) : (
-            <div className="text-center py-8 text-sm text-gray-500">
+            <div className="text-center py-8 text-xs text-gray-500">
               No questions found under this category.
             </div>
           )}
         </div>
 
         {/* Bottom Support Callout Box */}
-        <div className="mt-12 text-center p-6 bg-gray-50/50 border border-gray-100 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+        <div className="mt-12 text-center p-6 bg-gray-50/50 border border-[#941865]/20 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
           <div className="text-left space-y-1">
-            <h3 className="text-lg font-bold text-gray-800">
+            <h3 className="text-base font-bold text-gray-800">
               Still have questions?
             </h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-xs text-gray-500">
               Can’t find the answer you’re looking for? Please contact our support team.
             </p>
           </div>
           <a
             href="tel:+880123456789"
-            className="flex items-center gap-2 px-6 py-3 rounded-xl text-white font-bold text-sm shadow-sm transition-transform duration-300 hover:scale-105 shrink-0"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-semibold text-xs shadow-sm transition-transform duration-300 hover:scale-105 shrink-0"
             style={{ backgroundColor: "#941865" }}
           >
-            <FiPhoneCall className="text-lg" />
+            <FiPhoneCall className="text-base" />
             Contact Support
           </a>
         </div>
