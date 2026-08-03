@@ -45,7 +45,10 @@ export default function Navbar() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: user.email, name: user.name }),
       })
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) throw new Error("JWT generation failed");
+          return res.json();
+        })
         .then((data) => {
           if (data.success && data.token) {
             localStorage.setItem("docappoint_token", data.token);
@@ -93,6 +96,11 @@ export default function Navbar() {
             trimmedQuery
           )}`
         );
+
+        if (!res.ok) {
+          throw new Error(`Server error: ${res.status}`);
+        }
+
         const data = await res.json();
 
         if (data.success) {
@@ -101,12 +109,11 @@ export default function Navbar() {
           setSearchResults([]);
         }
       } catch (error) {
-        console.error("Doctor search error:", error);
         setSearchResults([]);
       } finally {
         setIsSearching(false);
       }
-    }, 300); // 300ms debounce delay
+    }, 300);
 
     return () => clearTimeout(delayDebounceFn);
   }, [searchQuery]);
