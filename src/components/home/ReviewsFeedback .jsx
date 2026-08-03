@@ -39,7 +39,6 @@ const reviews = [
   },
 ];
 
-
 function StarRating({ rating }) {
   return (
     <div className="flex items-center gap-1">
@@ -58,18 +57,14 @@ function StarRating({ rating }) {
 
 export default function Testimonials() {
   return (
-    <section className="py-16 bg-[#FDF4F9] w-full">
-      <div className="max-w-7xl mx-auto px-6">
-
+    <section className="py-12 px-4 max-full mx-auto bg-[#FDF4F9] w-full">
+      <div className="max-w-7xl mx-auto">
         {/* Section Header */}
-        <div className="text-center mb-12">
-          <span className="text-sm font-semibold uppercase tracking-widest text-[#941865]">
-            Patient Reviews
-          </span>
-          <h2 className="text-3xl font-bold text-gray-800 mt-2">
-            What Our Patients Say
+        <div className="text-center max-w-xl mx-auto mb-10">
+          <h2 className="text-2xl font-bold tracking-tight text-gray-900 md:text-3xl">
+            What Our <span style={{ color: "#941865" }}>Patients Say</span>
           </h2>
-          <p className="text-gray-500 mt-3 max-w-xl mx-auto text-sm">
+          <p className="mt-2 text-xs md:text-sm text-gray-500">
             Thousands of patients trust DocAppoint for their healthcare needs. Here is what some of them have to say.
           </p>
         </div>
@@ -79,7 +74,7 @@ export default function Testimonials() {
           {reviews.map((review) => (
             <div
               key={review.id}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col gap-4 hover:shadow-md transition-shadow duration-300"
+              className="bg-white rounded-2xl p-6 shadow-sm border border-[#941865]/20 flex flex-col gap-4 hover:shadow-md transition-shadow duration-300"
             >
               {/* Quote Icon Box */}
               <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 bg-[#FDE8F3]">

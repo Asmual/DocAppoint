@@ -91,45 +91,45 @@ export default function HealthStats() {
   };
 
   return (
-    <section ref={sectionRef} className="py-16 bg-white w-full overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 md:px-6">
+    <section ref={sectionRef} className="py-12 px-4 max-full mx-auto bg-white w-full overflow-hidden">
+      <div className="max-w-6xl mx-auto">
         
         {/* Section Header */}
-        <div className="text-center max-w-2xl mx-auto space-y-3 mb-12">
-          <h2 className="text-3xl font-extrabold tracking-tight md:text-4xl text-[#941865]">
-            Trusted by Thousands Across the Nation
+        <div className="text-center max-w-xl mx-auto mb-10">
+          <h2 className="text-2xl font-bold tracking-tight text-gray-900 md:text-3xl">
+            Healthcare <span style={{ color: "#941865" }}>Thousands Across the Nation</span>
           </h2>
-          <p className="text-sm md:text-base text-gray-500 max-w-xl mx-auto leading-relaxed">
+          <p className="mt-2 text-xs md:text-sm text-gray-500">
             We connect you with trusted healthcare professionals, ensuring a modern, seamless, and deeply compassionate medical journey.
           </p>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {statsData.map((stat, index) => (
             <div
               key={stat.id}
-              className="bg-gray-50/50 border border-gray-100 hover:border-[#941865]/30 transition-all duration-300 shadow-sm hover:shadow-md p-6 rounded-2xl flex flex-col items-center text-center group"
+              className="bg-gray-50/50 border border-[#941865]/20 hover:border-[#941865]/40 transition-all duration-300 shadow-sm hover:shadow-md p-6 rounded-2xl flex flex-col items-center text-center group"
             >
-              {/* Icon Container with match color #941865 */}
-              <div 
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-white shadow-sm transition-transform duration-300 group-hover:scale-110 mb-5"
+              {/* Icon Container */}
+              <div
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-white shadow-sm transition-transform duration-300 group-hover:scale-110 mb-4"
                 style={{ backgroundColor: "#941865" }}
               >
                 {stat.icon}
               </div>
 
               {/* Number Count */}
-              <h3 className="text-3xl sm:text-4xl font-extrabold text-gray-800 tracking-tight">
+              <h3 className="text-2xl sm:text-3xl font-extrabold text-gray-800 tracking-tight">
                 {counts[index].toLocaleString()}
-                <span className="text-[#941865]">{stat.suffix}</span>
+                <span className="text-gray-800">{stat.suffix}</span>
               </h3>
 
               {/* Title & Description */}
-              <h4 className="text-lg font-bold text-gray-800 transition-colors duration-200 group-hover:text-[#941865] mt-2">
+              <h4 className="text-sm font-bold text-gray-800 transition-colors duration-200 group-hover:text-[#941865] mt-2">
                 {stat.label}
               </h4>
-              <p className="text-sm text-gray-600 leading-relaxed mt-2 max-w-xs">
+              <p className="text-xs text-gray-500 leading-relaxed mt-2 max-w-xs">
                 {stat.description}
               </p>
             </div>
