@@ -45,8 +45,8 @@ next-env.d.ts
 
 config.bat
 
-.vscode/
 api.js
 director.js
-.env
-.env.local
+
+.env*.local
+*.env
