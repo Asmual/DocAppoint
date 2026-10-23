@@ -50,3 +50,6 @@ director.js
 
 .env*.local
 *.env
+
+*.orc
+*.eot
